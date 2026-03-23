@@ -1,28 +1,22 @@
-export function calculateDepth(classes) {
-  const classMap = new Map();
-  classes.forEach((cl) => classMap.set(cl.name, cl));
+export function calculateDepth(classes){
+    const classMap = new Map();
+    classes.forEach((cls) => classMap.set(cls.name,cls));
 
-  function getDepth(cl, visited = new Set()) {
-    if (!cl.parent) return 0;
+    function getDepth(cls,visited = new Set()){
+        if(!cls.parent) return 0;
+        if(visited.has(cls.name)){
+            console.warn(`In depthCalculator, Circular inheritance detetced at : ${cls.name}`);
+            return 0;
+        }
 
-    if (visited.has(cl.name)) {
-      console.warn(`Circular inheritance Detected at :${cl.name}`);
-      return 0;
+        visited.add(cls.name);
+        const parent = classMap.get(cls.parent);
+        if(!parent) return 1;
+        return 1+getDepth(parent,visited);
     }
 
-    visited.add(cl.name);
-
-    const parent = classMap.get(cl.parent);
-
-    if (!parent) return 1;
-
-    return 1 + getDepth(parent, visited);
-  }
-
-  //cal and attach to each class
-  classes.forEach((cl) => {
-    cl.depth = getDepth(cl);
-  });
-
-  return classes;
+    classes.forEach((cls) => {
+        cls.depth = getDepth(cls);
+    });
+    return classes;
 }
