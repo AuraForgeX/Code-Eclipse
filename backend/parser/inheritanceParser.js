@@ -1,31 +1,35 @@
-export function parseInheritance(classes){
-    const classMap = new Map();
-    classes.forEach((cls) => classMap.set(cls.name,cls));
+export function parseInheritance(classes) {
+  const classMap = new Map();
+  classes.forEach((cl) => classMap.set(cl.name, cl));
 
-    classes.forEach((cls) => {
-        if(cls.parent){
-            if(!classMap.has(cls.parent)){
-                cls.parentMissing = true;
-            }else{
-                cls.parentMissing = false;
-                const parent = classMap.get(cls.parent);
-                if(!parent.children) parent.children = [];
-                parent.children.push(cls.name);
-            }
-        }
+  classes.forEach((cl) => {
+    //Validate parent existence
+    if (cl.parent) {
+      if (!classMap.has(cl.parent)) {
+        cl.parentMissing = true;
+      } else {
+        cl.parentMissing = false;
 
-        if(cls.interfaces && cls.interfaces.length > 0){
-            cls.missingInterfaces = cls.interfaces.filter(
-                (iface) => !classMap.has(iface)
-            );
+        //Add child(this class)-->parent
+        const parent = classMap.get(cl.parent);
+        if (!parent.children) parent.children = [];
+        parent.children.push(cl.name);
+      }
+    }
 
-            cls.resolvedInterfaces = cls.interfaces.filter(
-                (iface) => classMap.has(iface)
-            );
-        }else{
-            cls.missingInterfaces = [];
-            cls.resolvedInterfaces = [];
-        }
-    });
-    return classes;
+    //Validate interface existence
+    if (cl.interfaces && cl.interfaces.length > 0) {
+      cl.missingInterfaces = cl.interfaces.filter(
+        (iface) => !classMap.has(iface),
+      );
+      cl.resolvedInterface = cl.interfaces.filter((iface) =>
+        classMap.has(iface),
+      );
+    } else {
+      cl.missingInterfaces = [];
+      cl.resolveInterface = [];
+    }
+  });
+
+  return classes;
 }

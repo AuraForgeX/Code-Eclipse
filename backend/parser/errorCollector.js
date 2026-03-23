@@ -1,52 +1,66 @@
-export function collectErrors(classes,code){
-    const errors = [];
-    const classMap = new Map();
-    classes.forEach((cls) => classMap.set(cls.name,cls));
+export function collectErrors(classes, code) {
+  const errors = [];
 
-    classes.forEach((cls) => {
-        // Missing Parent
-        if(cls.parent && !classMap.has(cls.parent)){
-            errors.push(`Class "${cls.name}" extends "${cls.parent}" but "${cls.parent}" was not found in the code.`);
-        }
+  const classMap = new Map();
+  classes.forEach((cl) => classMap.set(cl.name, cl));
 
-        //Missing Interfaces
-        (cls.interfaces || []).forEach((iface) => {
-            if(!classMap.has(iface)){
-                errors.push(`Class "${cls.name}" implements "${iface}" but "${iface}" was not found in the code.`);
-            }
-        });
-        //Empty Class
-        const hasMembers = (cls.methods && cls.methods.length > 0) || (cls.fields && cls.fields.length > 0);
+  classes.forEach((cl) => {
+    //Missing parent
+    if (cl.parent && !classMap.has(cl.parent)) {
+      errors.push(
+        `Class "${cl.name}" extends "${cl.parent}" but "${cl.parent}" was not found in the code`,
+      );
+    }
 
-        if(!hasMembers){
-            errors.push(`Class "${cls.name}" has no methods or fields.`);
-        }
-        //Circular Inheritance
-        if(hasCircularInheritance(cls,classMap)){
-            errors.push(`Circular inheritance detected at class "${cls.name}".`);
-        }
-
-        //Abstract class with no abstract methods
-        if(cls.type === "abstract"){
-            const hasAbstractMethod = (cls.methods || []).some((m) => m.isAbstract);
-            if(!hasAbstractMethod){
-                errors.push(`Abstract class "${cls.name}" has no abstract methods.`);
-            }
-        }
-
-        //Interface with no methods
-        if(cls.type === "interface" && (!cls.methods || cls.methods.length === 0))
-            errors.push(`Interface "${cls.name}" has no methods defined.`);
+    //Missing Interfaces
+    (cl.interfaces || []).forEach((iface) => {
+      if (!classMap.has(iface)) {
+        errors.push(
+          `Class "${cl.name}" implements "${iface}" but "${iface}" was not found in the code`,
+        );
+      }
     });
 
-    return errors;
+    //Empty class
+    const hasMembers =
+      (cl.methods && cl.methods.length > 0) ||
+      (cl.fields && cl.fields.length > 0);
+
+    if (!hasMembers) {
+      errors.push(`Class "${cl.name}" has no methods or fields`);
+    }
+
+    //Circular Inheritance
+    if (hasCircularInheritance(cl, classMap)) {
+      errors.push(`Circular inheritance detected at the class "${cl.name}"`);
+    }
+
+    //No Abstract method  Abstract Class
+    if (cl.type === "abstract") {
+      const hasAbstractMethod = (cl.methods || []).some((m) => m.isAbstract);
+      if (!hasAbstractMethod) {
+        errors.push(`Abstract class "${cl.name}" has no abstract methods`);
+      }
+    }
+
+    //No method Interface
+    if (cl.type === "interface" && (!cl.methods || cl.methods.length === 0)) {
+      errors.push(`Interface "${cl.name}" has no methods defined`);
+    }
+  });
+
+  return errors;
 }
 
-function hasCircularInheritance(cls,classMap,visited = new Set()){
-    if(!cls.parent) return false;
-    if(visited.has(cls.name)) return true;
-    visited.add(cls.name);
-    const parent = classMap.get(cls.parent);
-    if(!parent) return false;
-    return hasCircularInheritance(parent,classMap,visited);
+//Helper fn
+function hasCircularInheritance(cl, classMap, visited = new Set()) {
+  if (!cl.parent) return false;
+  if (visited.has(cl.name)) return true;
+
+  visited.add(cl.name);
+
+  const parent = classMap.get(cl.parent);
+  if (!parent) return false;
+
+  return hasCircularInheritance(parent, classMap, visited);
 }
